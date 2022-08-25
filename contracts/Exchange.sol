@@ -9,9 +9,32 @@ contract Exchange{
 	address public feeAccount;
 	uint256 public feePercent;
 	mapping(address => mapping(address=>uint256))public tokens; 
+	mapping(uint256 => _Order)public orders;
+	uint256 public ordersCount;
 
 	event Deposit(address token, address user, uint256 amount, uint256 balance);
 	event Withdraw(address token, address user, uint256 amount, uint256 balance);
+
+	event Order(
+			uint256 id,
+			address user, //User who made order
+			address tokenGet,
+			uint256 amountGet, //Amount they receive
+			address tokenGive, //Address of token they give
+			uint256 amountGive, //Amount they give
+			uint256 timestamp
+	);
+
+	struct _Order{
+		// Attributes of an order
+		uint256 id; //Unique identifier for order
+		address user; //User who made order
+		address tokenGet; //Address of the token they receive
+		uint256 amountGet; //Amount they receive
+		address tokenGive; //Address of token they give
+		uint256 amountGive; //Amount they give
+		uint256 timestamp; //When order was created
+	}
 
 	constructor(address _feeAccount, uint256 _feePercent){
 		feeAccount = _feeAccount;
@@ -48,4 +71,25 @@ contract Exchange{
 		return tokens[_token][_user];
 	}
 
+
+	// Make and Cancel Orders
+
+	function makeOrder(address _tokenGet,uint256 _amountGet, address _tokenGive, uint256 _amountGive)public{
+		// Token Give(The token they want to spend)-Which token, and how much?
+		// Token Get(The token they want to receive)-Which token, and how much?
+
+		// Prevent orders if tokens aren't on exchange
+		require(balanceOf(_tokenGive, msg.sender)>= _amountGive);
+
+		// Create Order
+		ordersCount = ordersCount+1;
+		orders[ordersCount]=
+		_Order(1, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive,  block.timestamp);
+
+		// Emit event
+		emit Order(
+			ordersCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive,  block.timestamp
+		);
+
+	}
 }
